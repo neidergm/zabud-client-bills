@@ -44,12 +44,12 @@ const BillDetails = () => {
         script.setAttribute("data-reference", data.reference)
         script.setAttribute("data-signature:integrity", data.integrity)
 
+        script.setAttribute("data-redirect-url", "http://localhost:5173/transaccion")
         script.onload = (e: any) => {
             console.log(e)
         }
 
-        // script.setAttribute("data-redirect-url", "http://localhost:5173/")
-
+        wompiBtnRef.current.innerHTML = "";
         wompiBtnRef.current.appendChild(script);
         wompiBtnRef.current = null;
     }
@@ -58,22 +58,19 @@ const BillDetails = () => {
         if (!data) {
             if (!!id_contract && !!id_sede) {
                 DO_REQUEST(`${CONTRACT_BILL}/${id_contract}?sede=${id_sede}`).then(r => {
-                    console.log(r)
                     if (r.cod === "200") {
-                        setBillData(r.data);
-                        loadWompiBtn();
+                        return setBillData(r.data);
                     } else {
-                        navigate(`/`, { replace: true })
+                        return navigate(`/`, { replace: true })
                     }
                 })
             } else {
-                navigate(`/`, { replace: true })
+                return navigate(`/`, { replace: true })
             }
-        } else {
-            loadWompiBtn();
         }
+        loadWompiBtn();
 
-    }, [])
+    }, [data])
 
 
     if (!data) {
@@ -134,7 +131,15 @@ const BillDetails = () => {
                 </Table>
             </div>
             <div className='mt-5'>
-                <form ref={wompiBtnRef}></form>
+                <form ref={wompiBtnRef}>
+                    <div className='d-flex aling-items-center gap-3'>
+
+                        {<Loader />}
+                        <div>
+                            <span>Espere un momento</span>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     )

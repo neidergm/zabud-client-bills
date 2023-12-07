@@ -25,6 +25,7 @@ function App() {
             <Routes >
               <Route path='/' element={<SearchBill />} />
               <Route path='/factura/:id_sede/:id_contract' element={<BillDetails />} />
+              <Route path='/transaccion' element={<BillDetails />} />
               <Route path='*' element={<Navigate to="/" />} />
             </Routes>
           </Router>

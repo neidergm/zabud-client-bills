@@ -47,7 +47,6 @@ const SearchBill = () => {
         setLoader("Consultando factura")
 
         DO_REQUEST(`${CONTRACT_BILL}/${bill}?sede=${sede}`).then(r => {
-            console.log(r)
             if (r.cod === "200") {
                 setBillData(r.data);
                 navigate(`factura/${sede}/${bill}`)
