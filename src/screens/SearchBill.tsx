@@ -1,13 +1,13 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { Form, FormGroup, Label, Input, Button, FormFeedback } from 'reactstrap'
+import { Form, FormGroup, Label, Input, Button, FormFeedback, UncontrolledAlert } from 'reactstrap'
 import DO_REQUEST from '../services/axiosService';
 import { CONTRACT_BILL, SEDES } from '../services/endPointsService';
 import { I_Sedes, JSONObject } from '../interfaces/general.interface';
 import Loader from '../components/Loader';
-import {useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import logo from './../assets/logologin.png';
-import { ArrowRightCircleFill } from '../components/icons';
+import { ArrowRightCircleFill, ExclamationCircleFill } from '../components/icons';
 import { billContext } from '../App';
 
 const SearchBill = () => {
@@ -20,6 +20,7 @@ const SearchBill = () => {
 
     const search = useCallback((e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setBillData(null);
 
         if (loader) return null;
 
@@ -43,19 +44,19 @@ const SearchBill = () => {
         // debugger;
         // if (canSend) {
 
-            setLoader("Consultando factura")
+        setLoader("Consultando factura")
 
-            DO_REQUEST(`${CONTRACT_BILL}/${bill}?sede=${sede}`).then(r => {
-                console.log(r)
-                if (r.cod === "200") {
-                    setBillData(r.data);
-                    navigate(`factura/${sede}/${bill}`)
-                } else {
-                    setBillData(false)
-                }
-            }).finally(()=>{
-                setLoader(undefined)
-            })
+        DO_REQUEST(`${CONTRACT_BILL}/${bill}?sede=${sede}`).then(r => {
+            console.log(r)
+            if (r.cod === "200") {
+                setBillData(r.data);
+                navigate(`factura/${sede}/${bill}`)
+            } else {
+                setBillData(false)
+            }
+        }).finally(() => {
+            setLoader(undefined)
+        })
         // }
     }, [])
 
@@ -80,9 +81,6 @@ const SearchBill = () => {
 
     return (
         <div>
-            {billData === false && <div>
-                No se encontró factura, intente nuevamente
-            </div>}
             <div className='text-center mb-5'>
                 <h4>PORTAL DE PAGOS</h4>
             </div>
@@ -94,6 +92,11 @@ const SearchBill = () => {
                 </div>
                 <div className='vr bg-secondary d-none d-md-block'></div>
                 <div className='w-100 my-md-5 my-3'>
+                    {billData === false && <div className='pe-md-4'>
+                        <UncontrolledAlert color="danger" className='bg-danger text-white border-0'>
+                            <ExclamationCircleFill /> No se encontró factura
+                        </UncontrolledAlert>
+                    </div>}
                     {!sedes ? <Loader centered /> : (
                         <Form onSubmit={search} className='pe-md-4'>
                             <FormGroup className='mb-4'>
