@@ -4,6 +4,7 @@ import { I_Bill } from "./interfaces/general.interface"
 import useBillData from "./hooks/useBillData";
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import BillDetails from "./screens/BillDetails";
+import TransactionDetails from "./screens/TransactionDetails";
 
 type T_BillContext = {
   billData: null | I_Bill | false;
@@ -25,7 +26,7 @@ function App() {
             <Routes >
               <Route path='/' element={<SearchBill />} />
               <Route path='/factura/:id_sede/:id_contract' element={<BillDetails />} />
-              <Route path='/transaccion' element={<BillDetails />} />
+              <Route path='/transaccion' element={<TransactionDetails />} />
               <Route path='*' element={<Navigate to="/" />} />
             </Routes>
           </Router>

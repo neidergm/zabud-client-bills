@@ -1,7 +1,7 @@
 import { useContext, useEffect, useRef } from 'react';
 import { I_Bill } from '../interfaces/general.interface';
 import { Table, Button } from 'reactstrap';
-import { WOMPI_KEY } from '../services/constantsService';
+import { WOMPI_KEY, WOMPI_REDIRECTION_URL } from '../services/constantsService';
 import { CheckCircleFill, XCircleFill } from './../components/icons';
 import { billContext } from '../App';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -36,20 +36,27 @@ const BillDetails = () => {
         if (!wompiBtnRef.current) return null;
 
         const script = document.createElement('script');
-        script.src = "https://checkout.wompi.co/widget.js";
-        script.setAttribute("data-render", "button")
-        script.setAttribute("data-public-key", WOMPI_KEY)
-        script.setAttribute("data-currency", data.moneda)
-        script.setAttribute("data-amount-in-cents", data.valor_factura)
-        script.setAttribute("data-reference", data.reference)
-        script.setAttribute("data-signature:integrity", data.integrity)
 
-        script.setAttribute("data-redirect-url", `https://transaction-redirect.wompi.co/check`)
+        if (data.esta_pago !== 1) {
+            script.src = "https://checkout.wompi.co/widget.js";
+            script.setAttribute("data-render", "button")
+            script.setAttribute("data-public-key", WOMPI_KEY)
+            script.setAttribute("data-currency", data.moneda)
+            script.setAttribute("data-amount-in-cents", data.valor_factura)
+            script.setAttribute("data-reference", data.reference)
+            script.setAttribute("data-signature:integrity", data.integrity)
+
+            script.setAttribute("data-redirect-url", WOMPI_REDIRECTION_URL)
+        }
 
         wompiBtnRef.current.innerHTML = "";
         wompiBtnRef.current.appendChild(script);
         wompiBtnRef.current = null;
     }
+
+    // const getTransactionDetails = () => {
+    //     DO_REQUEST()
+    // }
 
     useEffect(() => {
         if (!data) {
@@ -65,8 +72,8 @@ const BillDetails = () => {
                 return navigate(`/`, { replace: true })
             }
         }
-        loadWompiBtn();
 
+        loadWompiBtn()
     }, [data])
 
 

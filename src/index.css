@@ -61,9 +61,10 @@ body {
 }
 
 .main-content > div{
-  border-radius: 20px;
+  border-radius: 30px;
   background-color: white;
   box-shadow: 0px 2px 30px -15px rgb(70, 89, 72);
+  min-width: 600px;
 }
 
 
@@ -71,9 +72,9 @@ body {
   min-width: 800px;
 }
 
-/* input, select{
-  border-color: #e9ecef !important;
-} */
+input, select{
+  border-color: #e9ecef;
+}
 
 
 @media screen and (max-width: 950px) {
@@ -84,11 +85,7 @@ body {
   .main-content > div{
     width: 100%;
   }
-}
-
-/* @media screen and (max-width: 760px) {
-  .search-bill-screen{
-    min-width: 90%;
-
+  .main-content > div{
+    min-width: auto;
   }
-} */
+}

@@ -21,9 +21,9 @@ const SearchBill = () => {
     const search = useCallback((e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (loader) return null;
-        
+
         const errors: JSONObject = {};
-        
+
         const sede = e.currentTarget.sede.value;
         const bill = e.currentTarget.bill.value;
 
@@ -31,7 +31,7 @@ const SearchBill = () => {
         if (!bill) errors["bill"] = "Campo obligatorio";
 
         setBillData(null);
-        if(Object.keys(errors).length){
+        if (Object.keys(errors).length) {
             return setErrors(errors)
         }
 
@@ -44,10 +44,7 @@ const SearchBill = () => {
             } else {
                 setBillData(false)
             }
-        }).finally(() => {
-            setLoader(undefined)
-        })
-        // }
+        }).finally(() => { setLoader(undefined) })
     }, []);
 
     const validateValue = (e: React.ChangeEvent<HTMLInputElement>) => {
