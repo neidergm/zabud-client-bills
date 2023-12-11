@@ -20,29 +20,20 @@ const SearchBill = () => {
 
     const search = useCallback((e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setBillData(null);
-
         if (loader) return null;
-
-        // let canSend = false;
+        
+        const errors: JSONObject = {};
+        
         const sede = e.currentTarget.sede.value;
         const bill = e.currentTarget.bill.value;
 
-        // setErrors(er => {
-        //     if (!sede) { er["sede"] = "Este campo es obligatorio" }
-        //     else delete er["sede"];
+        if (!sede) errors["sede"] = "Campo obligatorio";
+        if (!bill) errors["bill"] = "Campo obligatorio";
 
-        //     if (!bill) { er["bill"] = "Este campo es obligatorio" }
-        //     else delete er["bill"];
-
-        //     canSend = Object.keys(er).length === 0;
-
-        //     console.log(er, canSend)
-        //     return { ...er };
-        // })
-        // // eslint-disable-next-line no-debugger
-        // debugger;
-        // if (canSend) {
+        setBillData(null);
+        if(Object.keys(errors).length){
+            return setErrors(errors)
+        }
 
         setLoader("Consultando factura")
 
@@ -57,19 +48,19 @@ const SearchBill = () => {
             setLoader(undefined)
         })
         // }
-    }, [])
+    }, []);
 
     const validateValue = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // if (!e.target.value) {
-        //     setErrors(er => ({ ...er, [e.target.name]: "Campo requerido" }))
-        // } else {
-        //     if (errors[e.target.name]) {
-        //         setErrors((er) => {
-        //             delete er[e.target.name]
-        //             return { ...er }
-        //         })
-        //     }
-        // }
+        if (!e.target.value) {
+            setErrors(er => ({ ...er, [e.target.name]: "Campo requerido" }))
+        } else {
+            if (errors[e.target.name]) {
+                setErrors((er) => {
+                    delete er[e.target.name]
+                    return { ...er }
+                })
+            }
+        }
     }
 
     useEffect(() => {

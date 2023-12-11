@@ -44,10 +44,7 @@ const BillDetails = () => {
         script.setAttribute("data-reference", data.reference)
         script.setAttribute("data-signature:integrity", data.integrity)
 
-        script.setAttribute("data-redirect-url", "http://localhost:5173/transaccion")
-        script.onload = (e: any) => {
-            console.log(e)
-        }
+        script.setAttribute("data-redirect-url", `https://transaction-redirect.wompi.co/check`)
 
         wompiBtnRef.current.innerHTML = "";
         wompiBtnRef.current.appendChild(script);
