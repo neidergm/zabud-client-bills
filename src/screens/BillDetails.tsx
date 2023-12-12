@@ -8,8 +8,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { CONTRACT_BILL } from '../services/endPointsService';
 import DO_REQUEST from '../services/axiosService';
 import Loader from '../components/Loader';
+import logo from './../assets/logologin.png';
 
-const currencyFormatter = (currency = "COP") => new Intl.NumberFormat('es-ES', {
+export const currencyFormatter = (currency = "COP") => new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency,
     // These options are needed to round to whole numbers if that's what you want.
@@ -134,16 +135,21 @@ const BillDetails = () => {
                     </tbody>
                 </Table>
             </div>
-            <div className='mt-5'>
-                <form ref={wompiBtnRef}>
-                    <div className='d-flex aling-items-center gap-3'>
+            <div className='mt-5 d-flex justify-content-between align-items-end'>
+                <div>
+                    <img src={logo} height={50} />
+                </div>
+                <div className='text-end'>
+                    <form ref={wompiBtnRef}>
+                        <div className='d-flex aling-items-center gap-3'>
 
-                        {<Loader />}
-                        <div>
-                            <span>Espere un momento</span>
+                            {<Loader />}
+                            <div>
+                                <span>Espere un momento</span>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     )
