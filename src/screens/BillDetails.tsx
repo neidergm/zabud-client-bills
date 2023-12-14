@@ -1,7 +1,7 @@
-import { useContext, useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { I_Bill } from '../interfaces/general.interface';
 import { Table, Button } from 'reactstrap';
-import { WOMPI_KEY, WOMPI_REDIRECTION_URL } from '../services/constantsService';
+import { CAPTCHA_KEY, WOMPI_KEY, WOMPI_REDIRECTION_URL } from '../services/constantsService';
 import { CheckCircleFill, XCircleFill } from './../components/icons';
 import { billContext } from '../App';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ import { CONTRACT_BILL } from '../services/endPointsService';
 import DO_REQUEST from '../services/axiosService';
 import Loader from '../components/Loader';
 import logo from './../assets/logologin.png';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export const currencyFormatter = (currency = "COP") => new Intl.NumberFormat('es-ES', {
     style: 'currency',
@@ -18,13 +19,27 @@ export const currencyFormatter = (currency = "COP") => new Intl.NumberFormat('es
     // maximumFractionDigits: 0, // (causes 2500.99 to be printed as $2,501)
 });
 
+const CloseButton = ({ action }: { action: () => void }) => {
+    return <div className='position-absolute top-0 end-0 p-4'>
+        <Button color='link' className='link-secondary' onClick={action}>
+            <XCircleFill size={20} />
+        </Button>
+    </div>
+}
 
 const BillDetails = () => {
 
-    const { billData, setBillData } = useContext(billContext);
+    const {
+        billData,
+        setBillData,
+        captchaSuccess,
+        setCaptchaSuccess
+    } = useContext(billContext);
     const data = billData as I_Bill;
     const { id_sede, id_contract } = useParams();
     const navigate = useNavigate();
+
+    const [captchaLoaded, setCaptchaLoaded] = useState(false);
 
     const wompiBtnRef = useRef<HTMLFormElement | null>(null);
 
@@ -48,6 +63,13 @@ const BillDetails = () => {
             script.setAttribute("data-signature:integrity", data.integrity)
 
             script.setAttribute("data-redirect-url", WOMPI_REDIRECTION_URL)
+
+            script.onload = (e: any) => {
+                console.log(e)
+            }
+            script.onerror = (e: any) => {
+                console.log(e)
+            }
         }
 
         wompiBtnRef.current.innerHTML = "";
@@ -55,11 +77,15 @@ const BillDetails = () => {
         wompiBtnRef.current = null;
     }
 
-    // const getTransactionDetails = () => {
-    //     DO_REQUEST()
-    // }
+    const onCaptchaChange = (value: null | string) => {
+        console.log(value)
+        setCaptchaSuccess(value)
+        if (value) {
+            init();
+        }
+    }
 
-    useEffect(() => {
+    const init = () => {
         if (!data) {
             if (!!id_contract && !!id_sede) {
                 DO_REQUEST(`${CONTRACT_BILL}/${id_contract}?sede=${id_sede}`).then(r => {
@@ -75,84 +101,108 @@ const BillDetails = () => {
         }
 
         loadWompiBtn()
+    }
+
+    useEffect(() => {
+        captchaSuccess && init();
     }, [data])
 
+    if (!captchaSuccess) {
+        return <div className='text-center mb-4'>
 
-    if (!data) {
-        return <div className='p-5 text-center'>
-            <Loader centered />
-            <p className='small mt-4'>Consultando datos de factura</p>
-            <p className='small'>Por favor espere</p>
+            <div className='mb-5'>
+                <img src={logo} height={100} />
+            </div>
+
+            <CloseButton action={goBack} />
+
+            {captchaLoaded ? <p className='mb-5 fw-semibold'>
+                Para realizar la consulta de la factura por favor marque la casilla de verificación
+            </p> : <Loader />}
+            <ReCAPTCHA
+                className='justify-content-center d-flex'
+                // ref={recaptchaRef}
+                // onErrored={() => setCaptchaLoaded(null)}
+                //  onExpired={() => { setFormStatus(0) }}
+                asyncScriptOnLoad={() => setCaptchaLoaded(true)}
+                sitekey={CAPTCHA_KEY}
+                size="normal"
+                onChange={onCaptchaChange}
+            />
         </div>
     }
 
-    return (
-        <div className='px-md-5 py-3'>
-            <div className='position-absolute top-0 end-0 p-4'>
-                <Button color='link' className='link-secondary' onClick={goBack}>
-                    <XCircleFill size={20} />
-                </Button>
+    return (<>
+        {!data ?
+            <div className='p-5 text-center'>
+                <div className='mb-5'>
+                    <img src={logo} height={100} />
+                </div>
+                <Loader centered />
+                <p className='small mt-4'>Consultando datos de factura</p>
+                <p className='small'>Por favor espere</p>
             </div>
-            <div>
-                <h1>¡Hola!</h1>
-                <p>{data.nomb_cliente} {data.apel_cliente}, estos son los detalles de la factura de tu plan</p>
-            </div>
-
-            <div className='mt-5'>
-                <Table bordered>
-                    <thead>
-                        <tr>
-                            <th colSpan={2} className='py-3 text-center'>
-                                {data.plan_contrato}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td className='fw-semibold'>Contrato</td>
-                            <td>{data.cod_contrato}</td>
-                        </tr>
-                        <tr>
-                            <td className='fw-semibold'>Estado</td>
-                            <td className={data.esta_pago === 1 ? "table-success" : ""}>
-                                {data.esta_pago === 1 ? <b className='text-success'>
-                                    <i className='me-2'><CheckCircleFill /></i>PAGADA
-                                </b> : "PENDIENTE DE PAGO"}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className='fw-semibold'>Valor a pagar</td>
-                            <td>{currencyFormatter(data.moneda).format(Number(data.valor))}</td>
-                        </tr>
-                        <tr>
-                            <td className='fw-semibold'>Fecha de emisión</td>
-                            <td>{data.femi_factura}</td>
-                        </tr>
-                        <tr>
-                            <td className='fw-semibold'>Fecha de vencimiento</td>
-                            <td>{data.fven_factura}</td>
-                        </tr>
-                    </tbody>
-                </Table>
-            </div>
-            <div className='mt-5 d-flex justify-content-between align-items-end'>
+            :
+            <div className='px-md-5 py-3'>
+                <CloseButton action={goBack} />
                 <div>
-                    <img src={logo} height={50} />
+                    <h1>¡Hola!</h1>
+                    <p>{data.nomb_cliente} {data.apel_cliente}, estos son los detalles de la factura de tu plan</p>
                 </div>
-                <div className='text-end'>
-                    <form ref={wompiBtnRef}>
-                        <div className='d-flex aling-items-center gap-3'>
 
-                            {<Loader />}
-                            <div>
-                                <span>Espere un momento</span>
-                            </div>
-                        </div>
-                    </form>
+                <div className='mt-5'>
+                    <Table bordered>
+                        <thead>
+                            <tr>
+                                <th colSpan={2} className='py-3 text-center'>
+                                    {data.plan_contrato}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td className='fw-semibold'>Contrato</td>
+                                <td>{data.cod_contrato}</td>
+                            </tr>
+                            <tr>
+                                <td className='fw-semibold'>Estado</td>
+                                <td className={data.esta_pago === 1 ? "table-success" : ""}>
+                                    {data.esta_pago === 1 ? <b className='text-success'>
+                                        <i className='me-2'><CheckCircleFill /></i>PAGADA
+                                    </b> : "PENDIENTE DE PAGO"}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className='fw-semibold'>Valor a pagar</td>
+                                <td>{currencyFormatter(data.moneda).format(Number(data.valor))}</td>
+                            </tr>
+                            <tr>
+                                <td className='fw-semibold'>Fecha de emisión</td>
+                                <td>{data.femi_factura}</td>
+                            </tr>
+                            <tr>
+                                <td className='fw-semibold'>Fecha de vencimiento</td>
+                                <td>{data.fven_factura}</td>
+                            </tr>
+                        </tbody>
+                    </Table>
                 </div>
-            </div>
-        </div>
-    )
+                <div className='mt-5 d-flex justify-content-between align-items-end'>
+                    <div>
+                        <img src={logo} height={50} />
+                    </div>
+                    <div className='text-end'>
+                        <form ref={wompiBtnRef}>
+                            <div className='d-flex aling-items-center gap-1'>
+                                <div className='text-center'>
+                                    <Loader><small>Espere un momento</small></Loader>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div >}
+    </>)
 }
 
 export default BillDetails

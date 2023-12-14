@@ -1,6 +1,6 @@
-export const API_BASE =  "https://apps.zabudnet.com.co:8090/apizabudtest/api";
+import config from "../../public/config.json";
 
-export const WOMPI_KEY = "pub_prod_jPMjHSRpETOd76QmaPJmWH1Ww7zX43ci";
-export const WOMPI_REDIRECTION_URL = `${window.location.origin}/transaccion`;
-
-// script.setAttribute("data-redirect-url", `https://transaction-redirect.wompi.co/check`)
+export const API_BASE = config.api;
+export const CAPTCHA_KEY = config.captcha;
+export const WOMPI_KEY = config.wopmpi_key;
+export const WOMPI_REDIRECTION_URL = config.wompi_redirection || `${window.location.origin}/transaccion`;

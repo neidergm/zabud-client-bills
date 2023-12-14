@@ -5,21 +5,23 @@ import useBillData from "./hooks/useBillData";
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import BillDetails from "./screens/BillDetails";
 import TransactionDetails from "./screens/TransactionDetails";
+import useCaptcha, { T_Captcha } from "./hooks/useCaptcha";
 
 type T_BillContext = {
   billData: null | I_Bill | false;
   setBillData: (data: null | I_Bill | false) => void
 }
 
-export const billContext = createContext({} as T_BillContext)
+export const billContext = createContext({} as T_BillContext & T_Captcha)
 
 const { Provider } = billContext;
 
 function App() {
   const { billData, setBillData } = useBillData();
+  const captchaObject = useCaptcha();
 
   return (
-    <Provider value={{ billData, setBillData }}>
+    <Provider value={{ billData, setBillData, ...captchaObject }}>
       <div className="main-content p-2 p-sm-4 p-md-5">
         <div className="px-4 py-5 px-sm-5 position-relative">
           <Router>

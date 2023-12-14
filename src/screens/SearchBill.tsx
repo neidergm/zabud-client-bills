@@ -1,26 +1,38 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState, useRef } from 'react'
 import { Form, FormGroup, Label, Input, Button, FormFeedback, UncontrolledAlert } from 'reactstrap'
 import DO_REQUEST from '../services/axiosService';
 import { CONTRACT_BILL, SEDES } from '../services/endPointsService';
 import { I_Sedes, JSONObject } from '../interfaces/general.interface';
 import Loader from '../components/Loader';
 import { useNavigate } from 'react-router-dom';
+import ReCAPTCHA from "react-google-recaptcha";
+import classnames from "classnames";
 
 import logo from './../assets/logologin.png';
 import { ArrowRightCircleFill, ExclamationCircleFill } from '../components/icons';
 import { billContext } from '../App';
+import { CAPTCHA_KEY } from '../services/constantsService';
 
 const SearchBill = () => {
-    const { billData, setBillData } = useContext(billContext)
+    const {
+        billData,
+        setBillData,
+        captchaSuccess,
+        setCaptchaSuccess,
+
+    } = useContext(billContext)
     const [sedes, setSedes] = useState<I_Sedes[]>();
     const [loader, setLoader] = useState<string>();
     const [errors, setErrors] = useState<JSONObject>({});
 
+    const recaptchaRef = useRef<ReCAPTCHA>(null);
+    const [captchaLoaded, setCaptchaLoaded] = useState(false);
+
     const navigate = useNavigate();
 
-    const search = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+    const search = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (loader) return null;
+        if (loader || !captchaSuccess) return null;
 
         const errors: JSONObject = {};
 
@@ -45,7 +57,7 @@ const SearchBill = () => {
                 setBillData(false)
             }
         }).finally(() => { setLoader(undefined) })
-    }, []);
+    }
 
     const validateValue = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.value) {
@@ -58,6 +70,10 @@ const SearchBill = () => {
                 })
             }
         }
+    }
+
+    const onCaptchaChange = (value: null | string) => {
+        setCaptchaSuccess(value)
     }
 
     useEffect(() => {
@@ -123,13 +139,24 @@ const SearchBill = () => {
                                 <FormFeedback >{errors["bill"]}</FormFeedback>
                             </FormGroup>
                             <div className='text-center'>
-                                {loader ? <Loader /> :
+                                {!captchaLoaded && <Loader />}
+                                <ReCAPTCHA
+                                    className={classnames('justify-content-center', captchaSuccess ? 'd-none' : 'd-flex')}
+                                    ref={recaptchaRef}
+                                    // onErrored={() => setCaptchaLoaded(null)}
+                                    //  onExpired={() => { setFormStatus(0) }}
+                                    asyncScriptOnLoad={() => setCaptchaLoaded(true)}
+                                    sitekey={CAPTCHA_KEY}
+                                    size="normal"
+                                    onChange={onCaptchaChange}
+                                />
+                                {captchaSuccess && (loader ? <Loader /> :
                                     <Button color="success" disabled={!!loader}>
                                         <span>Consultar
                                             <i className='ms-2'><ArrowRightCircleFill /></i>
                                         </span>
                                     </Button>
-                                }
+                                )}
                             </div>
                         </Form>
                     )}
