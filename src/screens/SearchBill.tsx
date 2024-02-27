@@ -124,7 +124,7 @@ const SearchBill = () => {
                             </FormGroup>
                             <FormGroup className='mb-5'>
                                 <Label for="bill">
-                                    Número de factura
+                                    Número de contrato
                                 </Label>
                                 <Input
                                     id="bill"
