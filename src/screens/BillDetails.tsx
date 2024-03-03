@@ -65,10 +65,10 @@ const BillDetails = () => {
             script.setAttribute("data-redirect-url", WOMPI_REDIRECTION_URL)
 
             script.onload = (e: any) => {
-                console.log(e)
+                // console.log(e)
             }
             script.onerror = (e: any) => {
-                console.log(e)
+                // console.log(e)
             }
         }
 
@@ -78,7 +78,6 @@ const BillDetails = () => {
     }
 
     const onCaptchaChange = (value: null | string) => {
-        console.log(value)
         setCaptchaSuccess(value)
         if (value) {
             init();

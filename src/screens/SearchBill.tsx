@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState, useRef } from 'react'
-import { Form, FormGroup, Label, Input, Button, FormFeedback, UncontrolledAlert } from 'reactstrap'
+import { Form, FormGroup, Label, Input, Button, FormFeedback, UncontrolledAlert, Row, Col } from 'reactstrap'
 import DO_REQUEST from '../services/axiosService';
-import { CONTRACT_BILL, SEDES } from '../services/endPointsService';
+import { CONTRACT_BILL, CONTRACT_BILL_BY_DNI, SEDES } from '../services/endPointsService';
 import { I_Sedes, JSONObject } from '../interfaces/general.interface';
 import Loader from '../components/Loader';
 import { useNavigate } from 'react-router-dom';
@@ -19,11 +19,17 @@ const SearchBill = () => {
         setBillData,
         captchaSuccess,
         setCaptchaSuccess,
-
     } = useContext(billContext)
+
     const [sedes, setSedes] = useState<I_Sedes[]>();
     const [loader, setLoader] = useState<string>();
     const [errors, setErrors] = useState<JSONObject>({});
+
+    const [formData, setFormData] = useState({
+        searchType: "dni",
+        location: "",
+        number: ""
+    })
 
     const recaptchaRef = useRef<ReCAPTCHA>(null);
     const [captchaLoaded, setCaptchaLoaded] = useState(false);
@@ -36,44 +42,59 @@ const SearchBill = () => {
 
         const errors: JSONObject = {};
 
-        const sede = e.currentTarget.sede.value;
-        const bill = e.currentTarget.bill.value;
-
-        if (!sede) errors["sede"] = "Campo obligatorio";
-        if (!bill) errors["bill"] = "Campo obligatorio";
+        Object.entries(formData).forEach(([key, value]) => {
+            if (!value) errors[key] = "Campo obligatorio"
+        })
 
         setBillData(null);
-        if (Object.keys(errors).length) {
+        const ks = Object.keys(errors);
+        if (ks.length) {
+            e.currentTarget[ks[0]].focus();
             return setErrors(errors)
         }
 
-        setLoader("Consultando factura")
+        setLoader("Consultando factura");
 
-        DO_REQUEST(`${CONTRACT_BILL}/${bill}?sede=${sede}`).then(r => {
-            if (r.cod === "200") {
-                setBillData(r.data);
-                navigate(`factura/${sede}/${bill}`)
-            } else {
-                setBillData(false)
-            }
-        }).finally(() => { setLoader(undefined) })
+        const isDNI = formData.searchType === "dni"
+
+        DO_REQUEST(`${ isDNI ? CONTRACT_BILL_BY_DNI : CONTRACT_BILL}/${formData.number}?sede=${formData.location}`)
+            .then(r => {
+                if (r.cod === "200") {
+                    const d = isDNI ? r.data[0] : r.data
+                    setBillData(d);
+                    navigate(`factura/${formData.location}/${d.cod_contrato}`)
+                } else {
+                    setBillData(false)
+                }
+            }).finally(() => { setLoader(undefined) })
     }
 
-    const validateValue = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.value) {
-            setErrors(er => ({ ...er, [e.target.name]: "Campo requerido" }))
-        } else {
-            if (errors[e.target.name]) {
-                setErrors((er) => {
-                    delete er[e.target.name]
-                    return { ...er }
-                })
-            }
-        }
-    }
+    // const validateValue = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     if (!e.target.value) {
+    //         setErrors(er => ({ ...er, [e.target.name]: "Campo requerido" }))
+    //     } else {
+    //         if (errors[e.target.name]) {
+    //             setErrors((er) => {
+    //                 delete er[e.target.name]
+    //                 return { ...er }
+    //             })
+    //         }
+    //     }
+    // }
 
     const onCaptchaChange = (value: null | string) => {
         setCaptchaSuccess(value)
+    }
+
+    const onFormChange = ({ target }: React.ChangeEvent<HTMLInputElement>, clearElement?: string) => {
+        if (errors[target.name] && !!target.value) {
+            setErrors(({ [target.name]: n, ...r }) => ({ ...r }))
+        }
+
+        setFormData(fd => {
+            if (clearElement) (fd as any)[clearElement] = "";
+            return { ...fd, [target.name]: target.value }
+        })
     }
 
     useEffect(() => {
@@ -107,37 +128,62 @@ const SearchBill = () => {
                                     Sede
                                 </Label>
                                 <Input
-                                    id="sede"
-                                    name="sede"
+                                    id="location"
+                                    name="location"
                                     type="select"
                                     disabled={!!loader}
-                                    invalid={!!errors["sede"]}
-                                    onChange={validateValue}
+                                    invalid={!!errors["location"]}
+                                    onChange={onFormChange}
+                                    value={formData.location}
                                 >
                                     <option value="">Seleccione...</option>
                                     {sedes.map(s =>
                                         <option value={s.cod_sede} key={s.cod_sede}>{s.nomb_sede}</option>
                                     )}
                                 </Input>
-                                <FormFeedback>{errors["sede"]}</FormFeedback>
+                                <FormFeedback>{errors["location"]}</FormFeedback>
 
                             </FormGroup>
-                            <FormGroup className='mb-5'>
-                                <Label for="bill">
-                                    Número de contrato
-                                </Label>
-                                <Input
-                                    id="bill"
-                                    name="bill"
-                                    placeholder=""
-                                    type="number"
-                                    disabled={!!loader}
-                                    invalid={!!errors["bill"]}
-                                    onChange={validateValue}
-                                    min={0}
-                                />
-                                <FormFeedback >{errors["bill"]}</FormFeedback>
-                            </FormGroup>
+
+                            <Row>
+                                <Col md={4} className='pe-0'>
+                                    <FormGroup>
+                                        <Label for="searchType">Buscar por</Label>
+                                        <Input
+                                            id="searchType"
+                                            name="searchType"
+                                            type="select"
+                                            value={formData.searchType}
+                                            onChange={e => {
+                                                onFormChange(e, "number")
+                                            }}
+                                        >
+                                            <option value="dni">CC</option>
+                                            <option value="contract">Contrato</option>
+                                        </Input>
+                                    </FormGroup>
+                                </Col>
+                                <Col className='ps-md-1'>
+                                    <FormGroup className='mb-5'>
+                                        <Label for="bill">
+                                            Número de {formData.searchType === "dni" ? "identificación" : "contrato"}
+                                        </Label>
+                                        <Input
+                                            id="number"
+                                            name="number"
+                                            placeholder=""
+                                            type="number"
+                                            disabled={!!loader}
+                                            invalid={!!errors["number"]}
+                                            onChange={onFormChange}
+                                            min={0}
+                                            value={formData.number}
+                                        />
+                                        <FormFeedback >{errors["number"]}</FormFeedback>
+                                    </FormGroup>
+                                </Col>
+                            </Row>
+
                             <div className='text-center'>
                                 {!captchaLoaded && <Loader />}
                                 <ReCAPTCHA
