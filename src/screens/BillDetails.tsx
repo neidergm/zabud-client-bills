@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import { I_Bill } from '../interfaces/general.interface';
-import { Table, Button } from 'reactstrap';
+import { Table, Button, Offcanvas, OffcanvasHeader, OffcanvasBody } from 'reactstrap';
 import { CAPTCHA_KEY, WOMPI_KEY, WOMPI_REDIRECTION_URL } from '../services/constantsService';
 import { CheckCircleFill, XCircleFill } from './../components/icons';
 import { billContext } from '../App';
@@ -10,6 +10,7 @@ import DO_REQUEST from '../services/axiosService';
 import Loader from '../components/Loader';
 import logo from './../assets/logologin.png';
 import ReCAPTCHA from 'react-google-recaptcha';
+import HistoricBills from './HistoricBills';
 
 export const currencyFormatter = (currency = "COP") => new Intl.NumberFormat('es-ES', {
     style: 'currency',
@@ -35,6 +36,9 @@ const BillDetails = () => {
         captchaSuccess,
         setCaptchaSuccess
     } = useContext(billContext);
+
+    const [showHistoric, setShowHistoric] = useState(false);
+
     const data = billData as I_Bill;
     const { id_sede, id_contract } = useParams();
     const navigate = useNavigate();
@@ -82,6 +86,10 @@ const BillDetails = () => {
         if (value) {
             init();
         }
+    }
+
+    const toggleBillsHistoric = () => {
+        setShowHistoric(s => !s)
     }
 
     const init = () => {
@@ -143,6 +151,14 @@ const BillDetails = () => {
             </div>
             :
             <div className='px-md-5 py-3'>
+
+                <Offcanvas toggle={toggleBillsHistoric} isOpen={showHistoric} direction='end'>
+                    <OffcanvasHeader toggle={toggleBillsHistoric}>
+                        Historial de facturas
+                    </OffcanvasHeader>
+                    <OffcanvasBody><HistoricBills /></OffcanvasBody>
+                </Offcanvas>
+
                 <CloseButton action={goBack} />
                 <div>
                     <h1>¡Hola!</h1>
@@ -185,6 +201,11 @@ const BillDetails = () => {
                             </tr>
                         </tbody>
                     </Table>
+                </div>
+                <div className='text-center'>
+                    {/* <Button color='link link-secondary' onClick={toggleBillsHistoric}>
+                        Ver historial de facturas
+                    </Button> */}
                 </div>
                 <div className='mt-5 d-flex justify-content-between align-items-end'>
                     <div>
